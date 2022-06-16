@@ -1,0 +1,809 @@
+<!-- sldsValidatorIgnore -->
+<!-- sldsValidatorIgnore -->
+<!-- sldsValidatorIgnore -->
+<template>
+    <div class="slds-theme_default">
+        <div class="slds-p-around_medium">
+            <div class="slds-theme_default">
+                <div class="slds-p-around_medium">
+                    <lightning-progress-indicator type="path" current-step={selectedStep} variant="shaded">
+                        <lightning-progress-step label="Choose an Amendment Type" onstepfocus={selectStep1} value="Step1">
+                        </lightning-progress-step>
+                        <lightning-progress-step label="Product Selection" onstepfocus={selectStep2} value="Step2">
+                        </lightning-progress-step>
+                        <lightning-progress-step label="Order Actions" onstepfocus={selectStep3} value="Step3">
+                        </lightning-progress-step>
+                        <!--<lightning-progress-step label="Order Confirmation" onstepfocus={selectStep4} value="Step4">
+                        </lightning-progress-step>-->
+                    </lightning-progress-indicator>
+    
+                    <div class="slds-m-vertical_medium">
+                        <template if:false={Invoices}>
+                        <div if:true={displayOne} class="slds-align_absolute-center">
+                            <lightning-radio-group name="radioGroup"
+                              label="Amendment Type"
+                              options={options}
+                              value={Amendment}
+                              onchange={handleOnChange}
+                              type="radio"></lightning-radio-group>
+                        </div>
+                        
+                        <div if:true={displaySec}>
+                            <div class="slds-grid">
+                                <div class="slds-col" style="text-align:center">
+                                    <span><strong>Amendment Type:</strong> {Amendment}</span>
+                                </div>
+                            </div>
+                        <div if:true={casesSpinner} class="slds-spinner_inline spinner-padding">
+                                <lightning-spinner variant="brand" 
+                                                   alternative-text="Loading Cases"     
+                                                   size="medium">
+                                </lightning-spinner>
+                            </div>
+                            <template if:false={AddProducts}>
+                                <template if:false={PriceChange}>
+                                <template if:false={FrequencyChange}>
+                                    <template if:false={ProductSwap}>
+                                        <lightning-tree-grid columns={gridColumns} data={gridData}
+                                                                            key-field="Id" onrowselection={updateSelectedRows}
+                                                                            selected-rows={selectedRows} ontoggle={onToggleDispo} expanded-rows={ExpandedRows}>
+                                                                        </lightning-tree-grid>
+                                    </template>
+                                    <template if:true={ProductSwap}>                                  
+                                        <lightning-tree-grid columns={gridColumnsProductSwap} data={gridData}
+                                                                            key-field="Id" onrowselection={updateSelectedRows}
+                                                                            selected-rows={selectedRows} ontoggle={onToggleDispo} expanded-rows={ExpandedRows}>
+                                                                        </lightning-tree-grid>
+                                    </template>
+                                </template>
+                                </template>
+                                <template if:true={FrequencyChange}>
+                                    <lightning-tree-grid columns={gridColumnsFrequency} data={gridData}
+                                                                        key-field="Id" onrowselection={updateSelectedRows}
+                                                                        selected-rows={selectedRows} ontoggle={onToggleDispo} expanded-rows={ExpandedRows}>
+                                                                    </lightning-tree-grid>
+                                </template>
+                                <template if:true={PriceChange}>
+                                    <lightning-tree-grid columns={gridColumnsPrice} data={gridData}
+                                                                        key-field="Id" onrowselection={updateSelectedRows}
+                                                                        selected-rows={selectedRows} ontoggle={onToggleDispo} expanded-rows={ExpandedRows}>
+                                                                    </lightning-tree-grid>
+                                </template>
+    
+                            </template>
+                            <template if:true={AddProducts}>
+                                <br/>
+                                <h3></h3>
+                                <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th class="" scope="col">
+                                            <div class="slds-truncate" title="Product Name">Select Product</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Select Billing Frequency</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Select Start Date</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Select Buisness Unit</div>
+                                            </th>
+                                            <!--<th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Product Subscription Term</div>
+                                            </th>-->
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="slds-hint-parent"> 
+                                            <td data-label="Select Product">    
+                                            <lightning-record-edit-form object-api-name="SBQQ__QuoteLine__c">
+                                                <lightning-input-field id="fieldid" required="true" variant="label-hidden" field-name="PPB_Addition_Product__c"
+                                                    value={Product} onchange={handleProductSelect}>
+                                                </lightning-input-field>
+                                            </lightning-record-edit-form>
+                                            </td>
+                                            <td data-label="Billing Frequency">
+                                                <template if:true={Billingoptions}>
+                                                    <lightning-combobox class="start-select" variant="label-hidden"
+                                                        options={Billingoptions} onchange={handleFrequencyChangee}>
+                                                    </lightning-combobox>
+                                                </template>
+                                            </td>
+                                            <td><lightning-input type="date" onchange={handleReplacementDatee} variant="label-hidden" ></lightning-input> </td>
+                                            <td>
+                                            <select class="slds-select" data-id="TypeSelect" onchange={handleNewBusinessChangee} >
+                                                <template if:true={newOrderBuisnessUnitOptions}>
+                                                    <option value="">Select Business Unit</option>
+                                                    <template for:each={newOrderBuisnessUnitOptions} for:item="listViewItem">
+                                                        <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                    </template>
+                                                </template>
+                                                </select>
+                                            </td>
+                                            <!--<td>
+                                                <div class="slds-list_horizontal slds-grid slds-grid_vertical-align-center">
+                                                    <lightning-input type="number" class="term" maxlength="3" onchange={handleSubscriptionTerm} variant="label-hidden" ></lightning-input> &nbsp;&nbsp; <h2>days</h2>
+                                                </div>
+                                            </td>-->
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </template>
+                        </div>
+    
+                        <div if:true={displayThird}>
+                            <div class="slds-grid">
+                                <div class="slds-col" style="text-align:center">
+                                    <span><strong>Amendment Type:</strong> {Amendment}</span>
+                                </div>
+                            </div>
+                            <div if:true={casesSpinner} class="slds-spinner_inline spinner-padding">
+                                <lightning-spinner variant="brand" 
+                                                   alternative-text="Loading Cases"     
+                                                   size="medium">
+                                </lightning-spinner>
+                            </div>
+                            <template if:true={UpdateStartEndDate}>
+                                <template if:true={oliList}>
+                                    <lightning-datatable key-field="Id" data={oliList} draft-values={saveDraftValues} oncellchange={handleSave}
+                                        selected-rows={oliSelection} columns={olicolumnsTerminated} hide-checkbox-column="true" suppress-bottom-bar="true" 
+                                        onrowselection={handleOliSelect} show-row-number-column="true">
+                                    </lightning-datatable>
+                                </template>
+                            </template>
+                            <template if:true={OnHold}>
+                                <template if:true={oliList}>
+                                    <lightning-datatable key-field="Id" data={oliList} draft-values={saveDraftValues2} oncellchange={handleSaveOnHold} 
+                                        selected-rows={oliSelection} columns={olicolumnsOnHold} hide-checkbox-column="true" 
+                                        onrowselection={handleOliSelect} show-row-number-column="true" suppress-bottom-bar="true">
+                                    </lightning-datatable>
+                                </template>
+                            </template>
+                            <template if:true={ProductSwap}>
+                                <!--<template if:true={ProductSwapPage2}>-->
+                                    <template if:true={oliList}>
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+                                        <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th class="" scope="col">
+                                            <div class="slds-truncate" title="Product Name">Product Name</div>
+                                            </th>
+                                            <!--<th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Buisness Unit</div>
+                                            </th>-->
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Start Date</div>
+                                            </th>
+                                            <!-- <th class="" scope="col">
+                                                <div class="slds-truncate" title="Last Billing Date">Last Billing Date</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Next Billing Date</div>
+                                            </th> -->
+                                            <!--<th class="" scope="col">
+                                                <div class="slds-truncate" title="Quantity">Quantity</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Price">Price</div>
+                                            </th>-->
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Replacement Product">Replacement Buisness Unit</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                            <div class="slds-truncate" title="Replacement Date">Replacement Date</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Block Price">OPBP Frequency</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                            <div class="slds-truncate" title="Replacement Product">Replacement Product</div>
+                                            </th>
+                                      <!--     <th class="" scope="col">
+                                                <div class="slds-truncate" title="Replacement Product">Replacement Product Option</div>
+                                                </th>  --> 
+                                         <!--   <th class="" scope="col">
+                                                <div class="slds-truncate" title="Replacement Product">Subscription Term</div>
+                                            </th>-->
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <template for:each={oliList} for:item="orderproduct">  
+                                        <tr  key={orderproduct.id} class="slds-hint-parent">
+                                            <td data-label="Product Name">
+                                            <div class="slds-truncate" title="Cloudhub">{orderproduct.productName}</div>
+                                            </td>
+                                            <!--<td data-label="Buissness Unit">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.BusinessUnitName}</div>
+                                            </td>-->
+                                            <td data-label="Start Date">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.StartDate}</div>
+                                            </td>
+                                            <!-- <td data-label="Last Billing Date">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.LastBillingDate}</div>
+                                            </td>
+                                            <td data-label="Next Billing Date">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.NextBillingDate}</div>
+                                            </td> -->
+                                            <!--<td data-label="Quantity">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.quantity}</div>
+                                            </td>
+                                            <td data-label="Price">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.price}</div>
+                                            </td>-->
+                                            <td data-label="Replacement Business Unit">
+                                                <template if:true={orderproduct.isParent}>
+                                                    <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleNewBusinessChange} >
+                                                    <template if:true={orderproduct.BusinessUnitList}>
+                                                        <option  value={orderproduct.BuisnessUnitId}>{orderproduct.BusinessUnitName}</option>
+                                                        <template for:each={orderproduct.BusinessUnitList} for:item="listViewItem">
+                                                            <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                        </template>
+                                                    </template>
+                                                    </select>
+                                                </template>
+                                                <template if:true={orderproduct.SelectedAlone}>
+                                                    <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleNewBusinessChange} >
+                                                    <template if:true={orderproduct.BusinessUnitList}>
+                                                        <option value={orderproduct.BuisnessUnitId}>{orderproduct.BusinessUnitName}</option>
+                                                        <template for:each={orderproduct.BusinessUnitList} for:item="listViewItem">
+                                                            <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                        </template>
+                                                    </template> 
+                                                    </select>
+                                                </template>
+                                            </td>
+                                            <td data-label="Replacement Date">
+                                                <template if:true={orderproduct.isParent}>
+                                                    <lightning-input type="date" name={orderproduct.Id} onchange={handleReplacementDate} variant="label-hidden" value={orderproduct.ReplacementDate} ></lightning-input> 
+                                                </template>
+                                                <template if:true={orderproduct.SelectedAlone}>
+                                                    <lightning-input type="date" name={orderproduct.Id} onchange={handleReplacementDate} variant="label-hidden" value={orderproduct.ReplacementDate} ></lightning-input> 
+                                                </template>  
+                                            </td>
+    
+                                            <td data-label="OPBP Frequency">
+                                                <template if:true={Billingoptions}>
+                                                    <template if:true={orderproduct.isParent}>
+                                                        <lightning-combobox name={orderproduct.Id} variant="label-hidden" value={orderproduct.OPBPFrequency}
+                                                            options={OPBPFreqoptions} onchange={handleFrequencyChange}>
+                                                        </lightning-combobox>
+                                                    </template>
+                                                    <template if:true={orderproduct.SelectedAlone}>
+                                                        <lightning-combobox name={orderproduct.Id} variant="label-hidden" value={orderproduct.OPBPFrequency}
+                                                            options={OPBPFreqoptions} onchange={handleFrequencyChange}>
+                                                        </lightning-combobox>
+                                                    </template>
+                                                </template>
+                                            </td>
+                                     
+    
+                                           <td data-label="Replacement Product">
+
+                                                <template if:true={orderproduct.isParent}>
+                                                    <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleNewProductChange} >
+                                                    <template if:true={orderproduct.ProductSelectionList}>
+                                                        <option value="">Select Product</option>
+                                                        <template for:each={orderproduct.ProductSelectionList} for:item="listViewItem">
+                                                            <option key={listViewItem} value={listViewItem}>{listViewItem}</option>
+                                                        </template>
+                                                    </template>
+                                                    </select>
+                                                </template>
+                                                <template if:true={orderproduct.SelectedAlone}>
+                                                    <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleNewProductChange} >
+                                                    <template if:true={orderproduct.ProductSelectionList}>
+                                                        <option value="">Select Product</option>
+                                                        <template for:each={orderproduct.ProductSelectionList} for:item="listViewItem">
+                                                            <option key={listViewItem} value={listViewItem}>{listViewItem}</option>
+                                                        </template>
+                                                    </template>
+                                                    </select>
+                                                </template>
+                                            </td>
+    
+                                 <!--<td data-label="Replacement Product Option">
+                                                <template if:true={orderproduct.isParent}>
+                                                    <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleNewOptionChange} >
+                                                    <template if:true={orderproduct.OptionList}>
+                                                        <option value="">Select Product Option</option>
+                                                        <template for:each={orderproduct.OptionList} for:item="listViewItem">
+                                                            <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.SBQQ__OptionalSKU__r.Name}</option>
+                                                        </template>
+                                                    </template>
+                                                    </select>
+                                                </template>
+                                                <template if:true={orderproduct.SelectedAlone}>
+                                                    <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleNewOptionChange} >
+                                                    <template if:true={orderproduct.OptionList}>
+                                                        <option value="">Select Product Option</option>
+                                                        <template for:each={orderproduct.OptionList} for:item="listViewItem">
+                                                            <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.SBQQ__OptionalSKU__r.Name}</option>
+                                                        </template>
+                                                    </template>
+                                                    </select>
+                                                </template>
+                                            </td>-->         
+    
+                                     <!--       <td data-label="SubscriptionTerm">
+                                                <template if:true={orderproduct.isParent}>
+                                                    <lightning-input type="Number" name={orderproduct.Id} onchange={handleSubscriptionTermm} variant="label-hidden" value={orderproduct.SubscriptionTerm} ></lightning-input> 
+                                                </template>
+                                                <template if:true={orderproduct.SelectedAlone}>
+                                                    <lightning-input type="Number" name={orderproduct.Id} onchange={handleSubscriptionTermm} variant="label-hidden" value={orderproduct.SubscriptionTerm} ></lightning-input> 
+                                                </template>
+                                            </td>-->
+                                        </tr>
+                                        </template>
+                                        </tbody>
+                                        </table>
+
+                                        <lightning-input class="slds-p-left_xx-small" type="checkbox" label="Do you want to present amendment to customer?" onchange={handleChangeOfCheckbox} ></lightning-input>
+
+                                    </template>
+                                <!--</template>-->
+                               <!--<template if:true={ProductSwapPage2}>
+                                    <template if:true={oliList}>
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+                                        <thead>
+                                          <tr class="slds-line-height_reset">
+                                            <th class="" scope="col">
+                                              <div class="slds-truncate" title="Replacement Date">Replacement Date</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                              <div class="slds-truncate" title="Replacement Product">Replacement Product</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Discount">Discount</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Block Price">Block Price</div>
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                        <template for:each={oliList} for:item="orderproduct">  
+                                          <tr  key={orderproduct.id} class="slds-hint-parent">
+                                            <td data-label="Replacement Date">
+                                                <div class="slds-truncate" title="Replacement Date">{orderproduct.ReplacementDate}</div>
+                                            </td>
+                                            <td data-label="Replacement Product">
+                                                <div class="slds-truncate" title="Replacement Product">{orderproduct.NewProduct}</div>
+                                            </td>
+                                            <td data-label="Discount">
+                                                <template if:true={orderproduct.isParent}>
+                                                    <template if:true={orderproduct.ChargeTypeUsage}>
+                                                        <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleDiscountScheduleChange} >
+                                                        <template if:true={orderproduct.discountschedules}>
+                                                            <option value="">Select Discount Schedule</option>
+                                                            <template for:each={orderproduct.discountschedules} for:item="listViewItem">
+                                                                <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                            </template>
+                                                        </template>
+                                                        </select>
+                                                    </template>
+                                                    <template if:false={orderproduct.ChargeTypeUsage}>
+                                                        <lightning-input type="number" formatter="percent" name={orderproduct.Id} onchange={handleDiscountPercent} variant="label-hidden" value={orderproduct.discountPercent} ></lightning-input>
+                                                    </template>
+                                                </template>
+                                                <template if:true={orderproduct.SelectedAlone}>
+                                                    <template if:true={orderproduct.ChargeTypeUsage}>
+                                                        <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleDiscountScheduleChange} >
+                                                        <template if:true={orderproduct.discountschedules}>
+                                                            <option value="">Select Discount Schedule</option>
+                                                            <template for:each={orderproduct.discountschedules} for:item="listViewItem">
+                                                                <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                            </template>
+                                                        </template>
+                                                        </select>
+                                                    </template>
+                                                    <template if:false={orderproduct.ChargeTypeUsage}>
+                                                        <lightning-input type="number" formatter="percent" name={orderproduct.Id} onchange={handleDiscountPercent} variant="label-hidden" value={orderproduct.discountPercent} ></lightning-input>
+                                                    </template>
+                                                </template>
+                                            </td>
+                                            <td data-label="Block Price">
+                                                <template if:true={orderproduct.isParent}>
+                                                    <template if:true={orderproduct.ChargeTypeUsage}>
+                                                        <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleBlockPriceChange} >
+                                                            <template if:true={orderproduct.blockprices}>
+                                                                <option value="">Select Block Price</option>
+                                                                <template for:each={orderproduct.blockprices} for:item="listViewItem">
+                                                                    <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                                </template>
+                                                            </template>
+                                                        </select>
+                                                    </template>
+                                                </template>
+                                                <template if:true={orderproduct.SelectedAlone}>
+                                                    <template if:true={orderproduct.ChargeTypeUsage}>
+                                                        <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleBlockPriceChange} >
+                                                            <template if:true={orderproduct.blockprices}>
+                                                                <option value="">Select Block Price</option>
+                                                                <template for:each={orderproduct.blockprices} for:item="listViewItem">
+                                                                    <option key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                                </template>
+                                                            </template>
+                                                        </select>
+                                                    </template>
+                                                </template>
+                                            </td>
+                                          </tr>
+                                        </template>
+                                        </tbody>
+                                        </table>
+                                    </template>
+                                </template>-->
+                            </template>
+    
+    
+    
+                            <template if:true={PriceChange}>
+                                <div class="slds-scrollable" style="padding-bottom:300px;">
+                                    <table class="slds-scrollable_x slds-scrollable slds-table  slds-table_cell-buffer slds-table_bordered slds-table_col-bordered" style="height:5rem;width:200rem" >
+                                    <thead>
+                            
+                                    <tr class="slds-line-height_reset">
+                                        <th class="" scope="col">
+                                        <div class="slds-truncate" title="Product Name">Product Name</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate" title="Product Name">Buisness Unit</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate" title="Product Name">Start Date</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate" title="Last Billing Date">Last Billing Date</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate" title="Product Name">Next Billing Date</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                            <div class="slds-truncate" title="Quantity">Quantity</div>
+                                        </th>
+                                        <th class=""  scope="col">
+                                            <div  style="width:80px;" class="slds-truncate" title="Price">Price</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div style="width:150px;" class="slds-truncate" title="Effective Date">Effective Date</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div style="width:100px;" class="slds-truncate" title="Discount">Discount</div>
+                                        </th>
+                                    <!--   <th class="" scope="col">
+                                            <div class="slds-truncate" title="Billable Unit Price">Billable Unit Price</div>
+                                        </th> --> 
+                                        <th class="" scope="col">
+                                            <div style="width:200px;" class="slds-truncate" title="OPBP Frequency">OPBP Frequency</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div style="width:200px;" class="slds-truncate" title="Billing Type">Billing Type</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div class="slds-truncate" title="Additional Disc (Amt)">Additional Disc (Amt)</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div class="slds-truncate" title="Additional Disc (%)">Additional Disc (%)</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div style="width:200px;" class="slds-truncate" title="Fixed Billed Month">Fixed Billed Month</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div style="width:200px;" class="slds-truncate" title="Usage Type">Usage Type</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div class="slds-truncate" title="Monthly Minimum">Monthly Minimum</div>
+                                        </th>
+                                        <th class="" scope="col">
+                                        <div class="slds-truncate" title="Price Increase to Apply">Price Increase to Apply</div>
+                                        </th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <template for:each={oliList} for:item="orderproduct">  
+                                    <tr  key={orderproduct.id} class="slds-hint-parent">
+                                        <td data-label="Product Name">
+                                        <div class="slds-truncate" title="Cloudhub">{orderproduct.productName}</div>
+                                        </td>
+                                        <td data-label="Buissness Unit">
+                                            <div class="slds-truncate" title="Cloudhub">{orderproduct.BusinessUnitName}</div>
+                                        </td>
+                                        <td data-label="Start Date">
+                                            <div class="slds-truncate" title="Cloudhub">{orderproduct.StartDate}</div>
+                                        </td>
+                                        <td data-label="Last Billing Date">
+                                            <div class="slds-truncate" title="Cloudhub">{orderproduct.LastBillingDate}</div>
+                                        </td>
+                                        <td data-label="Next Billing Date">
+                                            <div class="slds-truncate" title="Cloudhub">{orderproduct.NextBillingDate}</div>
+                                        </td>
+                                        <td data-label="Quantity">
+                                            <!--<div class="slds-truncate" title="Cloudhub">{orderproduct.quantity}</div> -->
+                                            <lightning-input style="width:80px;" type="number" name={orderproduct.Id} onchange={handleQuantity} variant="label-hidden" value={orderproduct.quantity}></lightning-input>
+                                        </td>
+                                        <td data-label="Price" style="width:50px;">
+                                            <!--<div class="slds-truncate" title="Cloudhub">{orderproduct.price}</div>-->
+                                            <lightning-input   style="width:80px;" type="number" name={orderproduct.Id} onchange={handlePrice} variant="label-hidden" value={orderproduct.unitprice} ></lightning-input>
+                                        </td>
+                                        <td data-label="Effective Date">
+                                            <lightning-input style="width:150px;" type="date" name={orderproduct.Id} onchange={handleEffectiveDate} variant="label-hidden" value={orderproduct.EffectiveDate} ></lightning-input> 
+                                        </td>
+                                        <td data-label="Discount">
+                                            <select class="slds-select" name={orderproduct.Id} data-id="TypeSelect" onchange={handleDiscountScheduleChange} >
+                                                <option value="">Select Discount Schedule</option>
+                                            <template if:false={orderproduct.UnitPriceEntered}>
+                                                <template if:true={orderproduct.DiscountSchedulesPresent}>
+                                                    
+                                                        <template if:true={orderproduct.discountschedules}>
+                                                        <template for:each={orderproduct.discountschedules} for:item="listViewItem">
+                                                            <option style="width:100px;" key={listViewItem.Id} value={listViewItem.Id}>{listViewItem.Name}</option>
+                                                        </template>
+                                                    </template>
+                                                    
+                                                </template>
+                                                <template if:false={orderproduct.DiscountSchedulesPresent}>
+                                                    <lightning-input type="number" formatter="percent" min="0" max="1" step="0.01" name={orderproduct.Id} onchange={handleDiscountPercent} variant="label-hidden" value={orderproduct.discountPercent} ></lightning-input>
+                                                </template>
+                                            </template>
+                                        </select>
+                                        </td>
+                                    <!--   <td data-label="Billable Unit Price">
+                                            <div class="slds-truncate" title="Cloudhub">{orderproduct.BillableUnitPrice}</div>
+                                        </td>--> 
+                                <!--       <td data-label="Billable Unit Price">-->  
+                                            <!--<div class="slds-truncate" title="Cloudhub">{orderproduct.BillableUnitPrice}</div>-->
+                                    <!--        <lightning-input type="number" name={orderproduct.Id} onchange={handleBillableUnitPrice} variant="label-hidden" value={orderproduct.BillableUnitPrice} ></lightning-input>
+                                    </td> -->
+                                <!--     <td data-label="Billing Frequency">
+                                        <div class="slds-truncate" title="Cloudhub">{orderproduct.BillableUnitPrice}</div>-->
+                                    <!--    <lightning-input type="String" name={orderproduct.Id} onchange={handleBillingFrequency} variant="label-hidden" value={orderproduct.billingFrequencies} ></lightning-input>
+                                </td>  -->
+                                
+                                <td data-label="OPBP Frequency">
+                                    <template if:true={OPBPFreqoptions}>
+                                        <lightning-combobox name={orderproduct.Id} variant="label-hidden" value={orderproduct.OPBPFrequency}
+                                            options={OPBPFreqoptions} onchange={handleOPBPFrequencyChange}>
+                                        </lightning-combobox>
+                                    </template>
+                                </td>
+                                
+    
+                            <!--    <td data-label="Billing Frequency">
+                                    <template if:true={Billingoptions}>
+                                        <lightning-combobox name={orderproduct.Id} variant="label-hidden" value={orderproduct.billingFrequency}
+                                            options={Billingoptions} onchange={handleFrequencyChange}>
+                                        </lightning-combobox>
+                                    </template>
+                                </td> -->
+    
+                                <td data-label="Billing Type">
+                                    <template if:true={BillingTypeOption}>
+                                        <lightning-combobox style="width:200px;" name={orderproduct.Id} variant="label-hidden"
+                                            options={BillingTypeOption} onchange={handleBillingTypeChange} value={orderproduct.BillingType}> 
+                                        </lightning-combobox>
+                                    </template>
+                                </td>
+    
+    
+                                        <td data-label="Additional Disc (Amt)">
+                                            <!--<div class="slds-truncate" title="Cloudhub">{orderproduct.BillableUnitPrice}</div>-->
+                                            <lightning-input type="number" name={orderproduct.Id} onchange={handleAdditionalDiscountAmt} variant="label-hidden" value={orderproduct.AdditionalDiscAmt} ></lightning-input>
+                                    </td>
+                                        
+                                        <td data-label="Additional Disc (%)">
+                                            <!--<div class="slds-truncate" title="Cloudhub">{orderproduct.BillableUnitPrice}</div>-->
+                                            <lightning-input type="number" name={orderproduct.Id} onchange={handleAdditionalDiscountPer} variant="label-hidden" value={orderproduct.AdditionalDiscPer} ></lightning-input>
+                                    </td>
+    
+                                    <td data-label="Fixed Billed Month">
+                                        <template if:true={FixedBilledMonthOption}>
+                                            <lightning-combobox style="width:200px;" name={orderproduct.Id} variant="label-hidden"
+                                                options={FixedBilledMonthOption} onchange={handleFixedilledMonthChange} value={orderproduct.FixedBilledMonth}> 
+                                            </lightning-combobox>
+                                        </template>
+                                    </td>
+    
+                                    <td data-label="Usage Type">
+                                        <template if:true={UsageTypeOption}>
+                                            <lightning-combobox style="width:200px;" name={orderproduct.Id} variant="label-hidden"
+                                                options={UsageTypeOption} onchange={handleUsageType} value={orderproduct.UsageType}> 
+                                            </lightning-combobox>
+                                        </template>
+                                    </td>
+                                        
+                                    <td data-label="Monthly Minimum">
+                                            <!--<div class="slds-truncate" title="Cloudhub">{orderproduct.BillableUnitPrice}</div>-->
+                                            <lightning-input type="number" name={orderproduct.Id} onchange={handleMonthlyMinimum} variant="label-hidden" value={orderproduct.MonthlyMinimum} ></lightning-input>
+                                    </td>
+    
+                                        <td data-label="Price Increase to Apply">
+                                            <!--<div class="slds-truncate" title="Cloudhub">{orderproduct.BillableUnitPrice}</div>-->
+                                            <lightning-input type="number" name={orderproduct.Id} onchange={handlePriceToIncrease} variant="label-hidden" value={orderproduct.PriceIncreasetoApply} ></lightning-input>
+                                    </td>
+                                    </tr>
+                                    </template>
+                                    </tbody>
+                                    </table>
+                                </div>
+                            </template>
+    
+                            <template if:true={FrequencyChange}>
+                                <template if:true={ProductSwapPage1}>
+                                    <template if:true={oliList}>
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+                                        <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th class="" scope="col">
+                                            <div class="slds-truncate" title="Product Name">Product Name</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Buisness Unit</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Start Date</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Last Billing Date</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Next Billing Date</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Quantity">Quantity</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Price">Price</div>
+                                            </th>
+                                            <th class="" scope="col">
+                                            <div class="slds-truncate" title="Replacement Date">Effective Date</div>
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <template for:each={oliList} for:item="orderproduct">  
+                                        <tr  key={orderproduct.id} class="slds-hint-parent">
+                                            <td data-label="Product Name">
+                                            <div class="slds-truncate" title="Cloudhub">{orderproduct.productName}</div>
+                                            </td>
+                                            <td data-label="Buissness Unit">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.BusinessUnitName}</div>
+                                            </td>
+                                            <td data-label="Start Date">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.StartDate}</div>
+                                            </td>
+                                            <td data-label="Last Billing Date">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.LastBillingDate}</div>
+                                            </td>
+                                            <td data-label="Next Billing Date">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.NextBillingDate}</div>
+                                            </td>
+                                            <td data-label="Quantity">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.quantity}</div>
+                                            </td>
+                                            <td data-label="Price">
+                                                <div class="slds-truncate" title="Cloudhub">{orderproduct.price}</div>
+                                            </td>
+                                            <td data-label="Effective Date">
+                                                    <lightning-input type="date" name={orderproduct.Id} onchange={handleEffectiveDate} variant="label-hidden" value={orderproduct.EffectiveDate} ></lightning-input> 
+                                            </td>
+                                        </tr>
+                                        </template>
+                                        </tbody>
+                                        </table>
+                                    </template>
+                                </template>
+                                <template if:true={ProductSwapPage2}>
+                                    <template if:true={oliList}>
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_col-bordered">
+                                        <thead>
+                                          <tr class="slds-line-height_reset">
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Product Name">Product Name</div>
+                                            </th>  
+                                            <th class="" scope="col">
+                                              <div class="slds-truncate" title="Effeactive Date">Effective Date</div>
+                                            </th>
+                                         <!--   <th class="" scope="col">
+                                                <div class="slds-truncate" title="Block Price">Billing Frequency</div>
+                                            </th> -->
+                                            <th class="" scope="col">
+                                                <div class="slds-truncate" title="Block Price">OPBP Frequency</div>
+                                            </th>
+                                          </tr>
+                                        </thead>
+                                        <tbody>
+                                        <template for:each={oliList} for:item="orderproduct">  
+                                          <tr  key={orderproduct.id} class="slds-hint-parent">
+                                            <td data-label="Product Name">
+                                                <div class="slds-truncate" title="Product Name">{orderproduct.productName}</div>
+                                            </td>
+                                            <td data-label="EffectiveDate Date">
+                                                <div class="slds-truncate" title="EffectiveDate Date">{orderproduct.EffectiveDate}</div>
+                                            </td>
+                                   <!--        <td data-label="Billing Frequency">
+                                                <template if:true={Billingoptions}>
+                                                    <lightning-combobox name={orderproduct.Id} variant="label-hidden" value={orderproduct.billingFrequency}
+                                                        options={Billingoptions} onchange={handleFrequencyChange}>
+                                                    </lightning-combobox>
+                                                </template>
+                                            </td>--> 
+                                            <td data-label="OPBP Frequency">
+                                                <template if:true={OPBPFreqoptions}>
+                                                    <lightning-combobox name={orderproduct.Id} variant="label-hidden" value={orderproduct.OPBPFrequency}
+                                                        options={OPBPFreqoptions} onchange={handleOPBPFrequencyChange}>
+                                                    </lightning-combobox>
+                                                </template>
+                                            </td>
+                                          </tr>
+                                        </template>
+                                        </tbody>
+                                        </table>
+                                    </template>
+                                </template>
+                            </template>
+                            
+                        </div>
+    
+                        <!--<div if:true={displayFour}>
+    
+                        </div>-->
+                        </template>
+                        <template if:true={Invoices}>
+                            
+                            <h1 style="text-align: center;">Prior to Amending, please disposition current Draft Invoices</h1>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="slds-modal__footer">
+            <lightning-button class="slds-float_left" label="Cancel" variant="neutral" onclick={closeModal}>
+            </lightning-button>
+            
+            <div if:false={Invoices}>
+                <template if:false={displayOne}>
+                    <lightning-button class="slds-m-left_x-small" label="Previous" variant="brand" onclick={handlePrev}>
+                    </lightning-button>
+                </template>
+                <template if:false={displayThird}>
+                    <template if:false={AddProducts}>    
+                    <lightning-button variant="brand" class="slds-m-left_x-small" label="Continue"
+                        onclick={handleNext}></lightning-button>
+                    </template>
+                    <template if:true={AddProducts}>
+                        <lightning-button variant="brand" class="slds-m-left_x-small" label="Save and Configure Price"
+                        onclick={handleAddProducts}></lightning-button>
+                    </template>
+                </template>        
+                <template if:true={displayThird}>
+    
+                    <template if:true={ProductSwapPage1}>
+                        <lightning-button variant="brand" class="slds-m-left_x-small" label="Next"
+                        onclick={handleProductSwapPageNext}></lightning-button>
+                    </template>
+    
+                    <template if:true={ProductSwapPage2}>
+                        <template if:false={ProductSwap}>
+                            <template if:false={UpdateStartEndDate}>
+                         <!--  <lightning-button variant="brand" class="slds-m-left_x-small" label="Save & Create New Amendment"
+                                onclick={SaveCloseNew}></lightning-button> --> 
+                                <lightning-button variant="brand" class="slds-m-left_x-small" label="Save & Close"
+                                onclick={SaveClose}></lightning-button>
+                            </template>
+                            <template if:true={UpdateStartEndDate}>
+                                <lightning-button variant="brand" disabled={terminationdateEntered} class="slds-m-left_x-small" label="Save & Close"
+                                onclick={SaveClose}></lightning-button>
+                            </template>  
+                        </template>
+                        <template if:true={ProductSwap}>
+                            <lightning-button variant="brand" class="slds-m-left_x-small" label="Save and Configure Price"
+                            onclick={SaveClose}></lightning-button>
+                        </template>
+                    </template>
+                </template>
+            </div>
+    
+        </footer>
+    </div>
+    </template>
